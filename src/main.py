@@ -1,13 +1,19 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-
-i= 27
+import os
+i= 10
 feature1=[]
 feature2=[]
 label =[]
 while i < 31:
+    if not os.path.exists('../data/trades202501' + str(i) + '.xlsx') :
+        i += 1
+        continue
     df = pd.read_excel('../data/trades202501' + str(i) + '.xlsx', engine='openpyxl', sheet_name = 0 , skiprows= 7, usecols = [7,8,9,10,11,12])
+    if not os.path.exists('../data/trades202501' + str(i+1) + '.xlsx') :
+        i += 1
+        continue
     df_next_day = pd.read_excel('../data/trades202501' + str(i+1) + '.xlsx', engine='openpyxl', sheet_name = 0 , skiprows= 7, usecols = [7,8,9,10,11,12])
 
     #put all the stocks of the df in a dictionary
@@ -48,21 +54,22 @@ input1 = tf.keras.Input(shape=(1,))
 input2 = tf.keras.Input(shape=(1,))
 merged = tf.keras.layers.concatenate([input1, input2])
 
-X = tf.keras.layers.Dense(4, activation='relu')(merged)
-X = tf.keras.layers.Dense(4, activation='relu')(X)
-output = tf.keras.layers.Dense(1, activation='sigmoid')(X)
+x = tf.keras.layers.Dense(32, activation='relu')(merged)
+x = tf.keras.layers.Dropout(0.2)(x)
+x = tf.keras.layers.Dense(16, activation='relu')(x)
+x = tf.keras.layers.Dropout(0.2)(x)
+x = tf.keras.layers.Dense(8, activation='relu')(x)
+output = tf.keras.layers.Dense(1, activation='sigmoid')(x)  # Binary classification output
 
 #Create the model
 model = tf.keras.Model(inputs=[input1, input2], outputs=output)
 
 #Compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005), loss='binary_crossentropy', metrics=['accuracy'])
 # Add early stopping
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
 #Fit the model
-model.fit([np.array(feature1), np.array(feature2)], np.array(label), epochs=100, batch_size=2)
+model.fit([np.array(feature1), np.array(feature2)], np.array(label), epochs=100, batch_size=2, validation_split=0.2, callbacks=[early_stopping])
 
-test_accuracy = model.evaluate([np.array(feature1), np.array(feature2)], np.array(label))
-
-print(test_accuracy)
+print(model.summary())
