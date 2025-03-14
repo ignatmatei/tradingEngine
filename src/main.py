@@ -6,7 +6,7 @@ i= 27
 feature1=[]
 feature2=[]
 label =[]
-while i < 30:
+while i < 31:
     df = pd.read_excel('../data/trades202501' + str(i) + '.xlsx', engine='openpyxl', sheet_name = 0 , skiprows= 7, usecols = [7,8,9,10,11,12])
     df_next_day = pd.read_excel('../data/trades202501' + str(i+1) + '.xlsx', engine='openpyxl', sheet_name = 0 , skiprows= 7, usecols = [7,8,9,10,11,12])
 
@@ -57,9 +57,11 @@ model = tf.keras.Model(inputs=[input1, input2], outputs=output)
 
 #Compile the model
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+# Add early stopping
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
 #Fit the model
-model.fit([np.array(feature1), np.array(feature2)], np.array(label), epochs=100, batch_size=32)
+model.fit([np.array(feature1), np.array(feature2)], np.array(label), epochs=100, batch_size=2)
 
 test_accuracy = model.evaluate([np.array(feature1), np.array(feature2)], np.array(label))
 
