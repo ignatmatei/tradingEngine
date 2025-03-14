@@ -72,4 +72,4 @@ early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5
 #Fit the model
 model.fit([np.array(feature1), np.array(feature2)], np.array(label), epochs=100, batch_size=2, validation_split=0.2, callbacks=[early_stopping])
 
-print(model.summary())
+print(model.evaluate([np.array(feature1), np.array(feature2)], np.array(label)))
